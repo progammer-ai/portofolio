@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drone & Sinematografi — Farrel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0d1b3e; --navy2: #112059;
+      --orange: #e05a1c; --orange2: #f07030;
+      --silver: #b0bbd4; --white: #f0f4ff;
+      --dark: #070e20;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: clamp(14px,1.2vw,18px); }
+    body { background: var(--dark); color: var(--white); font-family: var(--sans); overflow-x: hidden; cursor: none; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 1;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+      pointer-events: none; opacity: .35;
+    }
+
+    /* CURSOR */
+    #cursor { position: fixed; z-index: 9999; pointer-events: none; width: 12px; height: 12px; background: var(--orange); border-radius: 50%; transform: translate(-50%,-50%); transition: width .3s, height .3s, background .3s; }
+    #cursor-ring { position: fixed; z-index: 9998; pointer-events: none; width: 36px; height: 36px; border: 1.5px solid var(--orange); border-radius: 50%; transform: translate(-50%,-50%); transition: transform .18s ease, opacity .3s; opacity: .5; }
+
+    /* NAV */
+    nav { position: fixed; top: 0; width: 100%; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 2vh 5vw; backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.04); }
+    .logo { font-family: var(--mono); font-size: clamp(1rem,1.5vw,1.2rem); color: var(--orange); letter-spacing: .15em; }
+    .nav-back { font-family: var(--mono); font-size: clamp(.65rem,1vw,.85rem); color: var(--silver); text-decoration: none; letter-spacing: .12em; text-transform: uppercase; transition: color .25s; }
+    .nav-back:hover { color: var(--orange); }
+
+    /* HERO — full-width cinematic */
+    .page-hero {
+      position: relative; z-index: 2; min-height: 55vh;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 0 8vw 7vh;
+      background: 
+        radial-gradient(ellipse 70% 60% at 90% 20%, #0a1830 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 10% 90%, rgba(224,90,28,.25) 0%, transparent 60%),
+        linear-gradient(160deg, var(--dark) 0%, #0d1b3e 100%);
+      overflow: hidden;
+    }
+    /* cinematic scan lines */
+    .page-hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.06) 3px, rgba(0,0,0,.06) 4px);
+      pointer-events: none;
+    }
+    /* drone icon decoration */
+    .hero-drone-bg {
+      position: absolute; right: 8vw; top: 50%; transform: translateY(-50%);
+      font-size: clamp(8rem, 20vw, 18rem);
+      opacity: .04; user-select: none; z-index: 0;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100% { transform: translateY(-50%); } 50% { transform: translateY(calc(-50% - 12px)); } }
+
+    .page-tag { font-family: var(--mono); font-size: clamp(.6rem,1vmin,.85rem); color: var(--orange); letter-spacing: .2em; text-transform: uppercase; margin-bottom: 2vh; opacity: 0; animation: fadeUp .6s .2s forwards; position: relative; z-index: 1; }
+    .page-title { font-family: var(--sans); font-weight: 800; font-size: clamp(2.5rem,8vw,7rem); line-height: .92; letter-spacing: -.03em; opacity: 0; animation: fadeUp .7s .4s forwards; position: relative; z-index: 1; }
+    .page-title span { color: var(--orange); }
+    .page-desc { margin-top: 2.5vh; font-family: var(--mono); font-size: clamp(.7rem,1.1vw,.9rem); color: var(--silver); line-height: 1.8; max-width: 48vw; opacity: 0; animation: fadeUp .6s .6s forwards; position: relative; z-index: 1; }
+
+    /* IG REDIRECT BANNER */
+    .ig-banner {
+      position: relative; z-index: 2;
+      margin: 4vh 8vw 0;
+      padding: 2.5vh 2.5vw;
+      border: 1px solid rgba(224,90,28,.25);
+      background: rgba(224,90,28,.05);
+      display: flex; align-items: center; justify-content: space-between; gap: 2vw;
+      flex-wrap: wrap;
+    }
+    .ig-banner-text { font-family: var(--mono); font-size: clamp(.65rem,1vw,.85rem); color: var(--silver); line-height: 1.7; }
+    .ig-banner-text strong { color: var(--white); }
+    .ig-btn {
+      display: inline-flex; align-items: center; gap: .8vw;
+      background: var(--orange); color: var(--white);
+      font-family: var(--mono); font-size: clamp(.6rem,.9vw,.78rem);
+      letter-spacing: .12em; text-transform: uppercase;
+      text-decoration: none; padding: 1.2vh 2vw;
+      transition: background .3s, transform .2s; white-space: nowrap;
+    }
+    .ig-btn:hover { background: var(--orange2); transform: translateY(-2px); }
+    .ig-icon { font-size: 1.2em; }
+
+    /* POSTS GRID */
+    .posts-section { position: relative; z-index: 2; padding: 5vh 8vw 14vh; }
+    .section-label { font-family: var(--mono); font-size: clamp(.6rem,.9vw,.8rem); color: var(--orange); letter-spacing: .2em; text-transform: uppercase; margin-bottom: 2vh; }
+
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 28vw), 1fr));
+      gap: 1.5vw; margin-top: 3vh;
+    }
+
+    .post-card {
+      position: relative; overflow: hidden; cursor: none;
+      border: 1px solid rgba(255,255,255,.05);
+      opacity: 0; transform: scale(.97);
+      transition: opacity .5s, transform .5s, border-color .3s;
+    }
+    .post-card.visible { opacity: 1; transform: scale(1); }
+    .post-card:hover { border-color: rgba(224,90,28,.35); }
+
+    .post-thumb {
+      width: 100%; aspect-ratio: 1/1;
+      background: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    /* cinematic grid pattern */
+    .post-thumb::before {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(17,32,89,.6) 0px, rgba(17,32,89,.6) 1px,
+        transparent 1px, transparent 18px
+      );
+    }
+    .post-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; z-index: 1; position: relative; }
+    .post-card:hover .post-thumb img { transform: scale(1.06); }
+
+    .post-placeholder { font-size: clamp(3rem,7vw,6rem); z-index: 1; position: relative; }
+
+    .post-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      background: linear-gradient(to top, rgba(7,14,32,.95) 0%, rgba(7,14,32,.3) 50%, transparent 100%);
+      opacity: 0; transition: opacity .3s;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 2vh 1.5vw;
+    }
+    .post-card:hover .post-overlay { opacity: 1; }
+    .overlay-title { font-family: var(--sans); font-weight: 700; font-size: clamp(.8rem,1.3vw,1rem); margin-bottom: 1vh; }
+    .overlay-link {
+      font-family: var(--mono); font-size: clamp(.5rem,.8vw,.7rem);
+      color: var(--orange); text-decoration: none; letter-spacing: .15em;
+      text-transform: uppercase; border-bottom: 1px solid var(--orange);
+      padding-bottom: .15em; display: inline-block; width: fit-content;
+    }
+
+    /* SPECS / INFO */
+    .specs-section { position: relative; z-index: 2; padding: 0 8vw 8vh; }
+    .specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22vw), 1fr)); gap: 2vw; margin-top: 4vh; }
+    .spec-item { border: 1px solid rgba(255,255,255,.05); padding: 2.5vh 2vw; background: var(--navy); }
+    .spec-icon { font-size: 2rem; margin-bottom: 1.5vh; }
+    .spec-label { font-family: var(--mono); font-size: clamp(.55rem,.85vw,.75rem); color: var(--orange); letter-spacing: .18em; text-transform: uppercase; margin-bottom: .8vh; }
+    .spec-value { font-family: var(--sans); font-weight: 700; font-size: clamp(.9rem,1.5vw,1.2rem); }
+
+    footer { position: relative; z-index: 2; padding: 4vh 8vw; border-top: 1px solid rgba(255,255,255,.05); display: flex; align-items: center; justify-content: space-between; background: var(--dark); }
+    .footer-logo { font-family: var(--mono); font-size: clamp(.7rem,1vw,.9rem); color: var(--orange); letter-spacing: .15em; }
+    .footer-copy { font-family: var(--mono); font-size: clamp(.5rem,.8vw,.7rem); color: rgba(176,187,212,.4); letter-spacing: .1em; }
+    .footer-back { font-family: var(--mono); font-size: clamp(.5rem,.8vw,.7rem); color: var(--silver); text-decoration: none; letter-spacing: .12em; text-transform: uppercase; transition: color .3s; }
+    .footer-back:hover { color: var(--orange); }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    @media (max-width: 768px) {
+      .page-desc { max-width: 90vw; }
+      .posts-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5vw; }
+      .specs-grid { grid-template-columns: 1fr 1fr; }
+      .ig-banner { flex-direction: column; align-items: flex-start; }
+      footer { flex-direction: column; gap: 2vh; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<nav>
+  <div class="logo">FARREL ARSY ARDIANSYAH</div>
+  <a href="../index.html" class="nav-back">← Kembali ke Portfolio</a>
+</nav>
+
+<section class="page-hero">
+  <div class="hero-drone-bg">🚁</div>
+  <div class="page-tag">[ Project — 02 ]</div>
+  <h1 class="page-title">Drone &<br><span>Sinematografi.</span></h1>
+  <p class="page-desc">Footage aerial cinematic untuk kebutuhan dokumentasi sekolah. Setiap pengambilan gambar dirancang untuk storytelling visual yang kuat dari sudut yang tidak biasa.Tidak termasuk editing viddeo dan take video non drone</p>
+</section>
+
+<!-- IG REDIRECT -->
+<div class="ig-banner">
+  <div class="ig-banner-text">
+    <strong>Lihat semua postingan di Instagram SMADA →</strong><br>
+    Lebih dari 5 postingan footage drone cinematic tersedia di akun resmi SMAN 2 Bojonegoro.
+  </div>
+  <a href="https://www.instagram.com/sman2tarunapamongpraja_jatim/" target="_blank" class="ig-btn">
+    <span class="ig-icon">📷</span> Buka @smada_bjn
+  </a>
+</div>
+
+<!-- POSTS -->
+<section class="posts-section">
+  <div class="section-label">// Preview Footage</div>
+  <div class="posts-grid" id="postsGrid">
+
+    <!-- Post 1 — ganti href dengan link IG post & src dengan thumbnail -->
+    <div class="post-card">
+      <div class="post-thumb">
+         <img src="aset/1.png" alt="Footage 1"> 
+        <div class="post-placeholder">🎬</div>
+        <div class="post-overlay">
+          <div class="overlay-title">Footage Aerial — [Judul]</div>
+          <a href="https://www.instagram.com/reel/DI0qeIbpZFY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" target="_blank" class="overlay-link">Lihat di IG →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-card">
+      <div class="post-thumb">
+        <img src="aset/2.png" alt="Footage 2"> 
+        <div class="post-placeholder">🌅</div>
+        <div class="post-overlay">
+          <div class="overlay-title">Footage Aerial — [Judul]</div>
+          <a href="https://www.instagram.com/reel/DJX6czJyuib/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" target="_blank" class="overlay-link">Lihat di IG →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-card">
+      <div class="post-thumb">
+         <img src="aset/3.png" alt="Footage 3"> 
+        <div class="post-placeholder">🏫</div>
+        <div class="post-overlay">
+          <div class="overlay-title">Footage Aerial — [Judul]</div>
+          <a href="https://www.instagram.com/reel/DNc98qEJXck/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" target="_blank" class="overlay-link">Lihat di IG →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-card">
+      <div class="post-thumb">
+         <img src="aset/4.png" alt="Footage 4"> 
+        <div class="post-placeholder">🎥</div>
+        <div class="post-overlay">
+          <div class="overlay-title">Footage Aerial — [Judul]</div>
+          <a href="https://www.instagram.com/reel/DQ_dqUCEitX/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" target="_blank" class="overlay-link">Lihat di IG →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- tambah lebih banyak post dengan pola yang sama -->
+
+  </div>
+</section>
+
+<!-- SPECS -->
+<section class="specs-section">
+  <div class="section-label">// Spesifikasi & Kemampuan</div>
+  <div class="specs-grid">
+    <div class="spec-item">
+      <div class="spec-icon">🚁</div>
+      <div class="spec-label">Platform</div>
+      <div class="spec-value">Drone DJI</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-icon">🎬</div>
+      <div class="spec-label">Gaya</div>
+      <div class="spec-value">Cinematic Aerial</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-icon">📍</div>
+      <div class="spec-label">Lokasi</div>
+      <div class="spec-value">SMAN 2 Bojonegoro</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-icon">📸</div>
+      <div class="spec-label">Kegunaan</div>
+      <div class="spec-value">Dokumentasi & Promosi</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">FARREL ARSY ARDIANSYAH</div>
+  <div class="footer-copy">© 2026 Farrel — Drone & Sinematografi</div>
+  <a href="../index.html" class="footer-back">← Portfolio</a>
+</footer>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px'; });
+  function animRing() { rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
+  animRing();
+  document.querySelectorAll('a,button').forEach(el => {
+    el.addEventListener('mouseenter',()=>{ cursor.style.width='20px'; cursor.style.height='20px'; cursor.style.background='var(--orange2)'; });
+    el.addEventListener('mouseleave',()=>{ cursor.style.width='12px'; cursor.style.height='12px'; cursor.style.background='var(--orange)'; });
+  });
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e,i) => { if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'), i*80); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.post-card,.spec-item').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
